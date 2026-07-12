@@ -1,6 +1,6 @@
 # Moth Species Classification
 
-Transfer Learning with ResNet18 to classify 50 moth species. Built independently as a second Transfer Learning project to solidify the pattern on a different domain.
+Two parts: Transfer Learning with ResNet18 to classify 50 moth species, and a deployed REST API to serve predictions.
 
 **Test Accuracy: 98.4%** across 50 classes.
 
@@ -23,7 +23,7 @@ Transfer Learning with ResNet18 to classify 50 moth species. Built independently
 
 ---
 
-## Approach
+## Part 1: Training (`moth_classification.py`)
 
 **Stage 1 — Feature extraction:** froze all ResNet18 weights pretrained on ImageNet, replaced the final layer with `Linear(512, 50)` for the 50 moth classes. Trained for 89 epochs with Adam (lr=0.0001). Got to 95.6%.
 
@@ -31,11 +31,34 @@ Transfer Learning with ResNet18 to classify 50 moth species. Built independently
 
 Moths can appear at any orientation in real photos (wall, ceiling, flying) so both horizontal and vertical flips were used for augmentation, unlike scene classification where vertical flip would look unnatural.
 
+**Why ResNet transfers well to moths:** ResNet was pretrained on ImageNet which includes many insects and animals. Moth classification is closer to ImageNet's domain than scene classification is, which explains why feature extraction alone already reached 95.6% — the pretrained features already knew what wing textures and insect anatomy look like.
+
 ---
 
-## Why ResNet transfers well to moths
+## Part 2: REST API (`moth_api.py`)
 
-ResNet was pretrained on ImageNet which includes many insects and animals. Moth classification is closer to ImageNet's domain than scene classification is, which explains why feature extraction alone already reached 95.6% — the pretrained features already knew what wing textures and insect anatomy look like.
+A FastAPI endpoint that serves the fine-tuned model for real-time inference.
+
+Send any moth image, get back the species name and confidence score.
+
+**Endpoint:** `POST /predict`
+
+**Response:**
+```json
+{
+  "prediction": "ELEPHANT HAWK MOTH",
+  "confidence": 99.98
+}
+```
+
+**Run locally:**
+
+```bash
+pip install fastapi uvicorn python-multipart
+uvicorn moth_api:app --reload
+```
+
+Then open `http://127.0.0.1:8000/docs` to test it interactively.
 
 ---
 
@@ -45,6 +68,10 @@ ResNet was pretrained on ImageNet which includes many insects and animals. Moth 
 torch
 torchvision
 scikit-learn
+fastapi
+uvicorn
+python-multipart
+pillow
 ```
 
 ## Usage
@@ -53,4 +80,10 @@ Download the dataset from Kaggle, update the paths at the top of the script, the
 
 ```bash
 python moth_classification.py
+```
+
+To run the API:
+
+```bash
+uvicorn moth_api:app --reload
 ```
